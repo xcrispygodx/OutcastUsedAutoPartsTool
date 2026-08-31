@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pull List — Vehicle Parts Scavenger Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14161a;
+    --panel: #1c1f24;
+    --panel-line: #2a2e35;
+    --text: #ece8e1;
+    --muted: #8b8f94;
+    --orange: #e85d2a;
+    --yellow: #f2b705;
+    --steel: #5c7fa8;
+    --gray: #545a62;
+    --green: #6f9b6a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+    padding-bottom:80px;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:32px 20px;}
+
+  header.hero{margin-bottom:28px;}
+  .eyebrow{color:var(--orange);font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;letter-spacing:0.02em;margin-bottom:6px;}
+  h1{font-family:'Oswald',sans-serif;font-size:34px;font-weight:700;margin:0 0 8px 0;line-height:1.1;}
+  .sub{color:var(--muted);font-size:15px;max-width:46ch;}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+    border-radius:4px;
+    padding:20px;
+    margin-bottom:20px;
+  }
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .field{margin-bottom:14px;}
+  .field.full{grid-column:1 / -1;}
+  label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-weight:500;}
+  input[type=text], input[type=number], select{
+    width:100%;
+    background:#0f1114;
+    border:1px solid var(--panel-line);
+    color:var(--text);
+    padding:10px 11px;
+    border-radius:3px;
+    font-size:15px;
+    font-family:'Inter',sans-serif;
+  }
+  input:focus, select:focus{outline:2px solid var(--orange);outline-offset:1px;}
+
+  .btn{
+    display:inline-block;
+    background:var(--orange);
+    color:#14161a;
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    border:none;
+    padding:13px 22px;
+    border-radius:3px;
+    cursor:pointer;
+    width:100%;
+    letter-spacing:0.01em;
+  }
+  .btn:hover{background:#f16b39;}
+  .btn.secondary{
+    background:transparent;
+    border:1px solid var(--panel-line);
+    color:var(--text);
+    width:auto;
+    padding:9px 16px;
+    font-size:13px;
+  }
+
+  #results{display:none;}
+  .tier-block{margin-bottom:22px;}
+  .tier-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom:2px solid var(--tier-color, var(--orange));
+    padding-bottom:6px;
+    margin-bottom:10px;
+  }
+  .tier-head h2{font-family:'Oswald',sans-serif;font-size:18px;margin:0;color:var(--tier-color, var(--orange));}
+  .tier-head span{font-size:12px;color:var(--muted);}
+
+  .item{
+    background:var(--panel);
+    border:1px solid var(--panel-line);
+    border-left:3px solid var(--tier-color, var(--orange));
+    border-radius:3px;
+    padding:12px 14px;
+    margin-bottom:8px;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .item input[type=checkbox]{
+    margin-top:3px;
+    width:18px;height:18px;
+    accent-color:var(--orange);
+    flex-shrink:0;
+  }
+  .item.done{opacity:0.45;}
+  .item.done .item-name{text-decoration:line-through;}
+  .item-body{flex:1;min-width:0;}
+  .item-name{font-weight:600;font-size:15px;}
+  .item-note{font-size:13px;color:var(--muted);margin-top:2px;}
+  .item-footer{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;}
+  .value-badge{
+    font-family:'Oswald',sans-serif;
+    font-size:11px;
+    font-weight:600;
+    padding:2px 8px;
+    border-radius:2px;
+    letter-spacing:0.03em;
+  }
+  .value-high{background:rgba(232,93,42,0.18);color:var(--orange);}
+  .value-mid{background:rgba(92,127,168,0.2);color:var(--steel);}
+  .value-low{background:rgba(139,143,148,0.2);color:var(--muted);}
+  .ebay-link{
+    font-size:12.5px;
+    color:var(--yellow);
+    text-decoration:none;
+    border-bottom:1px solid rgba(242,183,5,0.4);
+  }
+  .ebay-link:hover{border-bottom-color:var(--yellow);}
+
+  .progress-bar{
+    position:fixed;bottom:0;left:0;right:0;
+    background:#0f1114;
+    border-top:1px solid var(--panel-line);
+    padding:12px 20px;
+    display:none;
+    align-items:center;
+    gap:14px;
+  }
+  .progress-bar .track{flex:1;height:6px;background:var(--panel-line);border-radius:3px;overflow:hidden;}
+  .progress-bar .fill{height:100%;background:var(--orange);width:0%;transition:width 0.25s;}
+  .progress-bar .count{font-family:'Oswald',sans-serif;font-size:13px;color:var(--muted);white-space:nowrap;}
+
+  .disclaimer{font-size:12px;color:var(--gray);margin-top:22px;line-height:1.6;}
+
+  @media print{
+    body{background:#fff;color:#000;}
+    .panel, .btn, header.hero .sub, .progress-bar, .ebay-link, .disclaimer{display:none !important;}
+    .item{border:1px solid #999;color:#000;background:#fff;}
+    .value-badge{border:1px solid #999;background:none !important;color:#000 !important;}
+    .tier-head h2, .tier-head span{color:#000 !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">PULL LIST</div>
+    <h1>What to strip before it hits the crusher</h1>
+    <div class="sub">Enter the vehicle. Get a ranked checklist of the parts worth pulling, heaviest payoff first, with a one-tap link to check what that exact part is actually selling for right now.</div>
+  </header>
+
+  <div class="panel">
+    <div class="grid">
+      <div class="field">
+        <label for="year">Year</label>
+        <input type="number" id="year" placeholder="2014" min="1980" max="2027">
+      </div>
+      <div class="field">
+        <label for="make">Make</label>
+        <input type="text" id="make" placeholder="Toyota">
+      </div>
+      <div class="field full">
+        <label for="model">Model</label>
+        <input type="text" id="model" placeholder="Tacoma">
+      </div>
+      <div class="field">
+        <label for="drivetrain">Drivetrain</label>
+        <select id="drivetrain">
+          <option value="fwd">FWD</option>
+          <option value="rwd">RWD</option>
+          <option value="awd">AWD</option>
+          <option value="4x4">4x4 / Part-time 4WD</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fuel">Fuel / Drivetrain type</label>
+        <select id="fuel">
+          <option value="gas">Gas</option>
+          <option value="diesel">Diesel</option>
+          <option value="hybrid">Hybrid</option>
+          <option value="ev">Electric (EV)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="body">Body style</label>
+        <select id="body">
+          <option value="sedan">Sedan / Coupe</option>
+          <option value="suv">SUV / Crossover</option>
+          <option value="truck">Pickup Truck</option>
+          <option value="van">Van / Minivan</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="boost">Forced induction</label>
+        <select id="boost">
+          <option value="na">Naturally aspirated</option>
+          <option value="turbo">Turbocharged</option>
+          <option value="super">Supercharged</option>
+        </select>
+      </div>
+      <div class="field full">
+        <label for="trim">Trim level (rough guess is fine)</label>
+        <select id="trim">
+          <option value="base">Base / work trim</option>
+          <option value="mid">Mid trim</option>
+          <option value="lux">Top / luxury trim (leather, sunroof, nav, etc.)</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn" onclick="generateList()">Generate pull list</button>
+  </div>
+
+  <div id="results"></div>
+
+  <div class="disclaimer" id="disclaimer" style="display:none;">
+    Rankings are based on general resale demand patterns for used auto parts, not a live pricing feed. Tap "check sold prices" on any part to see real current eBay sold-listing prices for your exact vehicle before you decide it's worth the labor. Always check local/state rules on removing airbags, refrigerant-containing A/C parts, and catalytic converters before selling.
+  </div>
+
+</div>
+
+<div class="progress-bar" id="progressBar">
+  <div class="track"><div class="fill" id="progressFill"></div></div>
+  <div class="count" id="progressCount">0 / 0 pulled</div>
+</div>
+
+<script>
+function ebayLink(year, make, model, part){
+  const q = encodeURIComponent(`${year} ${make} ${model} ${part}`);
+  return `https://www.ebay.com/sch/i.html?_nkw=${q}&LH_Sold=1&LH_Complete=1`;
+}
+
+function buildParts(input){
+  const {year, make, model, drivetrain, fuel, body, boost, trim} = input;
+  const parts = []; // {name, note, tier(1/2/3), value('high'/'mid'/'low')}
+
+  const add = (name, note, tier, value) => parts.push({name, note, tier, value});
+
+  // --- EV branch is different enough to mostly stand alone ---
+  if (fuel === 'ev') {
+    add('High-voltage battery pack', 'The single biggest payoff on an EV. Sells to rebuilders, off-grid/solar hobbyists, and other EV owners. Requires care — HV systems can be lethal, disconnect per service manual.', 1, 'high');
+    add('Drive motor(s) / inverter', 'In demand for EV conversion builders.', 1, 'high');
+    add('Onboard charger module', 'Compact, easy to ship, steady demand from EV owners doing repairs.', 1, 'mid');
+    add('Infotainment / center touchscreen', 'High resale on newer, tech-heavy trims.', 1, 'mid');
+    add('DC-DC converter', 'Common failure part on EVs, good resale.', 2, 'mid');
+    add('Charging port assembly', 'Damaged often by careless charging — steady demand.', 2, 'mid');
+    add('Wheels & tires', 'Especially aero-cover alloys unique to EV trims.', 1, 'mid');
+    add('Headlights / taillights (LED)', 'EVs are almost always LED — good value if lenses are clean.', 1, 'mid');
+    add('Seats & interior trim', trim === 'lux' ? 'Leather/heated/ventilated seats on top trims are worth pulling as a set.' : 'Cloth seats have lower but still real resale value.', 2, trim === 'lux' ? 'high' : 'mid');
+    add('Suspension struts (if newer/low miles)', 'EVs are heavy — struts wear, but low-mile take-offs still sell.', 3, 'low');
+  } else {
+    // --- Catalytic converter(s), universal high-value for combustion ---
+    const catNote = (make.toLowerCase().includes('toyota') || make.toLowerCase().includes('honda') || fuel === 'hybrid')
+      ? 'Toyota/Honda (and most hybrids) run catalysts with unusually high precious-metal loading — often the single most valuable part on the car. Verify local laws on cat sales; many states require ID/documentation.'
+      : 'Precious-metal content varies a lot by engine — worth scanning the serial number against a cat price guide before scrapping cheap.';
+    add('Catalytic converter(s)', catNote, 1, 'high');
+
+    if (fuel === 'hybrid') {
+      add('Hybrid battery pack', 'Strong demand from other hybrid owners needing a replacement pack and from refurbishers.', 1, 'high');
+      add('Hybrid inverter / power control unit', 'Pairs with the battery pack in demand — sell as a set if possible.', 1, 'mid');
+    }
+
+    if (boost === 'turbo' || boost === 'super') {
+      add(boost === 'turbo' ? 'Turbocharger' : 'Supercharger', 'Forced-induction hardware holds value well, especially on performance trims — check for cracks/shaft play before listing.', 1, 'high');
+    }
+
+    add('ECU / PCM (engine control module)', 'Small, light, ships cheap, steady demand for repairs — note it may need programming/matching to the donor VIN.', 1, 'high');
+    add('Infotainment head unit / nav screen', trim === 'lux' ? 'Premium nav/infotainment units on top trims are consistently one of the better payoffs.' : 'Even base-trim units have decent resale; larger touchscreens do best.', 1, 'high');
+    add('Headlights & taillights', (Number(year) >= 2015) ? 'Newer LED/projector units sell well if lenses aren\'t yellowed or cracked.' : 'Still worth pulling if lenses are clear — HID units especially.', 1, 'mid');
+    add('Alloy wheels (+ tires if usable)', 'Fast-moving, easy to ship locally/pick up. Tread life adds real value on top.', 1, 'mid');
+    add('Power mirrors (heated/turn signal/camera)', 'Compact and light to ship — good dollar-per-effort ratio.', 1, 'mid');
+    add('Airbags (steering wheel, seat, curtain)', 'High value but sensitive — many buyers require ID and there are legal restrictions on resale in some states. Confirm local rules first.', 1, 'high');
+    add('Seats', trim === 'lux' ? 'Leather/heated/power seats on top trims are worth pulling as a full set.' : 'Cloth seats still sell, especially in common colors, just for less.', 1, trim === 'lux' ? 'high' : 'mid');
+
+    add('Alternator', 'Consistent demand — a near-universal wear item.', 2, 'mid');
+    add('Starter', 'Same story as the alternator — cheap to ship, steady buyers.', 2, 'mid');
+    add('A/C compressor + condenser', 'Good resale, but check refrigerant handling rules before removal.', 2, 'mid');
+    add('Power steering pump / rack', 'Solid demand, moderate shipping weight.', 2, 'mid');
+    add('Doors (complete, with window regulator/switches)', 'Bulky to ship but high value if panels are undamaged — local pickup buyers especially.', 2, 'mid');
+    add('Radiator & cooling fan assembly', 'Decent resale, moderate size/weight.', 2, 'mid');
+    add('Engine wiring harness', 'Underrated — repair shops buy these for wiring fixes.', 2, 'low');
+    add('Fuel pump / injectors', 'Reliable sellers, especially direct-injection sets on newer engines.', 2, 'mid');
+
+    if (Number(year) >= 2012) {
+      add('Backup camera / blind-spot & radar modules', 'Newer safety-tech modules move fast, especially if the buyer\'s dash camera failed.', 1, 'mid');
+    }
+
+    if (drivetrain === 'awd' || drivetrain === '4x4') {
+      add('Transfer case', 'AWD/4x4-specific parts are harder to source used, which pushes value up.', 2, 'mid');
+      add('Front differential', 'Same logic — 4x4/AWD-specific parts command a premium.', 3, 'mid');
+    }
+
+    if (body === 'truck') {
+      add('Tailgate', 'Frequently damaged on trucks — steady replacement demand.', 2, 'mid');
+      add('Bed liner / toolbox / tonneau cover', 'If in good shape, these sell well and ship (or get picked up) easily.', 3, 'low');
+    }
+
+    add('Transmission (if it shifted fine)', 'One of the biggest payoffs on the list if it was running well — but heavy to ship, best sold locally or to a rebuilder.', 3, 'high');
+    add('Engine (if it ran well)', 'Can be the single biggest dollar item, but only worth pulling if you have the means to test, store, and ship/deliver a full engine.', 3, 'high');
+    add('Suspension struts/shocks (if newer)', 'Worth pulling if under ~60k miles, otherwise usually not worth the labor.', 3, 'low');
+    add('Sunroof/moonroof glass + motor', trim === 'lux' ? 'Present on most top trims — decent resale, moderate labor to remove.' : 'Skip if this trim doesn\'t have one.', 3, 'low');
+    add('Grille, badges & interior trim pieces', 'Low individual value but nearly zero labor — good use of leftover time.', 3, 'low');
+  }
+
+  return parts;
+}
+
+function tierMeta(tier){
+  if (tier === 1) return {label: 'Tier 1 — Pull these first', color: 'var(--orange)'};
+  if (tier === 2) return {label: 'Tier 2 — Worth the extra labor', color: 'var(--steel)'};
+  return {label: 'Tier 3 — If time and space allow', color: 'var(--gray)'};
+}
+
+function valueLabel(v){
+  if (v === 'high') return {text:'HIGH VALUE', cls:'value-high'};
+  if (v === 'mid') return {text:'MODERATE', cls:'value-mid'};
+  return {text:'LOW / BONUS', cls:'value-low'};
+}
+
+function generateList(){
+  const year = document.getElementById('year').value.trim() || 'this vehicle';
+  const make = document.getElementById('make').value.trim();
+  const model = document.getElementById('model').value.trim();
+
+  if (!make || !model) {
+    alert('Enter at least a make and model.');
+    return;
+  }
+
+  const input = {
+    year, make, model,
+    drivetrain: document.getElementById('drivetrain').value,
+    fuel: document.getElementById('fuel').value,
+    body: document.getElementById('body').value,
+    boost: document.getElementById('boost').value,
+    trim: document.getElementById('trim').value,
+  };
+
+  const parts = buildParts(input);
+  const results = document.getElementById('results');
+  results.innerHTML = '';
+  results.style.display = 'block';
+  document.getElementById('disclaimer').style.display = 'block';
+
+  [1,2,3].forEach(tierNum => {
+    const tierParts = parts.filter(p => p.tier === tierNum);
+    if (!tierParts.length) return;
+    const meta = tierMeta(tierNum);
+
+    const block = document.createElement('div');
+    block.className = 'tier-block';
+    block.style.setProperty('--tier-color', meta.color);
+
+    const head = document.createElement('div');
+    head.className = 'tier-head';
+    head.innerHTML = `<h2>${meta.label}</h2><span>${tierParts.length} item${tierParts.length>1?'s':''}</span>`;
+    block.appendChild(head);
+
+    tierParts.forEach((p, idx) => {
+      const vl = valueLabel(p.value);
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.style.setProperty('--tier-color', meta.color);
+      const link = ebayLink(year, make, model, p.name);
+      item.innerHTML = `
+        <input type="checkbox" onchange="toggleDone(this)">
+        <div class="item-body">
+          <div class="item-name">${p.name}</div>
+          <div class="item-note">${p.note}</div>
+          <div class="item-footer">
+            <span class="value-badge ${vl.cls}">${vl.text}</span>
+            <a class="ebay-link" href="${link}" target="_blank" rel="noopener">check sold prices on eBay →</a>
+          </div>
+        </div>
+      `;
+      block.appendChild(item);
+    });
+
+    results.appendChild(block);
+  });
+
+  const printRow = document.createElement('button');
+  printRow.className = 'btn secondary';
+  printRow.style.marginTop = '4px';
+  printRow.textContent = 'Print checklist';
+  printRow.onclick = () => window.print();
+  results.appendChild(printRow);
+
+  updateProgress();
+  document.getElementById('progressBar').style.display = 'flex';
+  results.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function toggleDone(checkbox){
+  const item = checkbox.closest('.item');
+  item.classList.toggle('done', checkbox.checked);
+  updateProgress();
+}
+
+function updateProgress(){
+  const all = document.querySelectorAll('#results .item input[type=checkbox]');
+  const done = document.querySelectorAll('#results .item input[type=checkbox]:checked');
+  const pct = all.length ? Math.round((done.length/all.length)*100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressCount').textContent = `${done.length} / ${all.length} pulled`;
+}
+</script>
+</body>
+</html>
